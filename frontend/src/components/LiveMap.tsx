@@ -6,12 +6,7 @@ import type { EventBrief, Category } from "@/lib/types";
 import { getEvents } from "@/lib/api";
 import { CATEGORY_CONFIG } from "@/lib/categories";
 import { timeAgo } from "@/lib/format";
-
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-
-const STYLE_URL = MAPBOX_TOKEN
-  ? `https://api.mapbox.com/styles/v1/mapbox/light-v11?access_token=${MAPBOX_TOKEN}`
-  : "https://tiles.openfreemap.org/styles/liberty";
+import { attachStyleFallback, PRIMARY_STYLE_URL } from "@/lib/map";
 
 const CATEGORIES: Category[] = [
   "earthquake",
@@ -66,12 +61,13 @@ export function LiveMap() {
     if (!containerRef.current || mapRef.current) return;
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: STYLE_URL,
+      style: PRIMARY_STYLE_URL,
       center: [10, 20],
       zoom: 1.5,
       attributionControl: { compact: true },
     });
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), "top-right");
+    attachStyleFallback(map);
     mapRef.current = map;
 
     map.on("load", () => {

@@ -4,11 +4,7 @@ import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import type { EventDetail } from "@/lib/types";
 import { categoryConfig } from "@/lib/categories";
-
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-const STYLE_URL = MAPBOX_TOKEN
-  ? `https://api.mapbox.com/styles/v1/mapbox/light-v11?access_token=${MAPBOX_TOKEN}`
-  : "https://tiles.openfreemap.org/styles/liberty";
+import { attachStyleFallback, PRIMARY_STYLE_URL } from "@/lib/map";
 
 export function DetailMap({ event }: { event: EventDetail }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -26,11 +22,12 @@ export function DetailMap({ event }: { event: EventDetail }) {
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: STYLE_URL,
+      style: PRIMARY_STYLE_URL,
       center,
       zoom,
       attributionControl: { compact: true },
     });
+    attachStyleFallback(map);
 
     if (hasPoint) {
       map.on("load", () => {
