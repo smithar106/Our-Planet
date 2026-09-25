@@ -181,13 +181,18 @@ async def ingest_eonet(session: AsyncSession, provider: EonetProvider) -> dict[s
 
 
 async def ingest_firms(session: AsyncSession, provider: FirmsProvider) -> dict[str, int]:
-    """Fetch FIRMS detections, cluster, and upsert clusters as wildfire events."""
-    stats = {"fetched": 0, "clusters": 0, "created": 0, "updated": 0, "escalated": 0}
+    """Fetch FIRMS detections, cluster, and upsert clusters as wildfire events.
+
+    Clusters below ``fire_min_detections`` are treated as noise (isolated
+    thermal anomalies, not meaningful fires) and are skipped.
+    """
+    stats = {"fetched": 0, "clusters": 0, "created": 0, "updated": 0, "escalated": 0, "pruned": 0}
     result: FetchResult = await provider.fetch()
     detections = result.records
     stats["fetched"] = len(detections)
 
     clusters = cluster_fire_detections(detections, radius_km=settings.fire_cluster_radius_km)
+    clusters = [c for c in clusters if c["detection_count"] >= settings.fire_min_detections]
     stats["clusters"] = len(clusters)
 
     existing_clusters = (await session.execute(select(FireCluster))).scalars().all()
@@ -207,7 +212,27 @@ async def ingest_firms(session: AsyncSession, provider: FirmsProvider) -> dict[s
                 stats["escalated"] += 1
             else:
                 stats["updated"] += 1
+
+    # Prune previously-created noise clusters (keeps the table clean over time).
+    stats["pruned"] = await _prune_noise_wildfire(session, settings.fire_min_detections)
     return stats
+
+
+async def _prune_noise_wildfire(session: AsyncSession, min_detections: int) -> int:
+    """Delete FIRMS wildfire events whose detection count fell below threshold.
+
+    EONET wildfire events (no ``detection_count`` in metrics) are unaffected
+    because the JSON comparison yields NULL, which never matches.
+    """
+    from sqlalchemy import delete
+
+    result = await session.execute(
+        delete(Event).where(
+            Event.category == "wildfire",
+            Event.metrics["detection_count"].as_integer() < min_detections,
+        )
+    )
+    return result.rowcount or 0
 
 
 def _score(n: NormalizedEvent) -> tuple[float, str]:

@@ -50,6 +50,7 @@ class Settings(BaseSettings):
 
     # --- FIRMS clustering ------------------------------------------------
     fire_cluster_radius_km: float = 5.0
+    fire_min_detections: int = 3  # clusters with fewer detections are treated as noise
 
     # --- HTTP ------------------------------------------------------------
     http_timeout_seconds: float = 30.0
