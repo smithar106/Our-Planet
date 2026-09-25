@@ -1,0 +1,12 @@
+# PLANET worker service (rename to `railway.json` when deploying the worker service)
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "alembic upgrade head && python -m app.cli worker",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  }
+}
