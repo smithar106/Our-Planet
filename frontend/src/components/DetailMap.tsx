@@ -31,6 +31,7 @@ export function DetailMap({ event }: { event: EventDetail }) {
 
     if (hasPoint) {
       map.on("load", () => {
+        if (map.getSource("event-point")) return;
         map.addSource("event-point", {
           type: "geojson",
           data: {

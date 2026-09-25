@@ -32,6 +32,7 @@ const SOURCE_ID = "planet-events";
 export function LiveMap() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const dataRef = useRef<GeoJSON.FeatureCollection>({ type: "FeatureCollection", features: [] });
   const [events, setEvents] = useState<EventBrief[]>([]);
   const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set(CATEGORIES));
   const [minSignificance, setMinSignificance] = useState(0);
@@ -70,14 +71,49 @@ export function LiveMap() {
     attachStyleFallback(map);
     mapRef.current = map;
 
-    map.on("load", () => {
+    // Interaction handlers — register once. Layer IDs are re-created on style
+    // fallback but keep the same names, so these remain valid.
+    CATEGORIES.forEach((cat) => {
+      const layerId = `events-${cat}`;
+      map.on("mouseenter", layerId, () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+      map.on("mouseleave", layerId, () => {
+        map.getCanvas().style.cursor = "";
+      });
+      map.on("click", layerId, (e) => {
+        const feat = e.features?.[0];
+        if (!feat) return;
+        const p = feat.properties as Record<string, unknown>;
+        const color = CATEGORY_CONFIG[cat].marker;
+        const html = `
+          <div style="min-width:224px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+              <span style="display:inline-block;width:8px;height:8px;border-radius:99px;background:${color}"></span>
+              <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#5a636b">${CATEGORY_CONFIG[cat].label}</span>
+            </div>
+            <p style="font-size:14px;font-weight:600;margin:0 0 2px;color:#14181b">${escapeHtml(String(p.title))}</p>
+            <p style="font-size:12px;color:#5a636b;margin:0 0 6px">${escapeHtml(String(p.tier))} · ${Math.round(Number(p.score))} · ${timeAgo(String(p.last))}</p>
+            <a href="/events/${p.id}" style="font-size:12px;font-weight:600;color:#0e6ba8;text-decoration:none">View event →</a>
+          </div>`;
+        new maplibregl.Popup({ offset: 14, closeButton: false })
+          .setLngLat(e.lngLat)
+          .setHTML(html)
+          .addTo(map);
+      });
+    });
+
+    // Add the source + layers when the style is ready. Runs again after a style
+    // fallback; the getSource guard keeps it idempotent.
+    const setupLayers = () => {
+      if (map.getSource(SOURCE_ID)) return;
       map.addSource(SOURCE_ID, {
         type: "geojson",
-        data: { type: "FeatureCollection", features: [] },
+        data: dataRef.current,
       });
-
       CATEGORIES.forEach((cat) => {
         const layerId = `events-${cat}`;
+        if (map.getLayer(layerId)) return;
         map.addLayer({
           id: layerId,
           type: "circle",
@@ -91,35 +127,9 @@ export function LiveMap() {
             "circle-stroke-color": "#ffffff",
           },
         });
-
-        map.on("mouseenter", layerId, () => {
-          map.getCanvas().style.cursor = "pointer";
-        });
-        map.on("mouseleave", layerId, () => {
-          map.getCanvas().style.cursor = "";
-        });
-        map.on("click", layerId, (e) => {
-          const feat = e.features?.[0];
-          if (!feat) return;
-          const p = feat.properties as Record<string, unknown>;
-          const color = CATEGORY_CONFIG[cat].marker;
-          const html = `
-            <div style="min-width:224px">
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-                <span style="display:inline-block;width:8px;height:8px;border-radius:99px;background:${color}"></span>
-                <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#5a636b">${CATEGORY_CONFIG[cat].label}</span>
-              </div>
-              <p style="font-size:14px;font-weight:600;margin:0 0 2px;color:#14181b">${escapeHtml(String(p.title))}</p>
-              <p style="font-size:12px;color:#5a636b;margin:0 0 6px">${escapeHtml(String(p.tier))} · ${Math.round(Number(p.score))} · ${timeAgo(String(p.last))}</p>
-              <a href="/events/${p.id}" style="font-size:12px;font-weight:600;color:#0e6ba8;text-decoration:none">View event →</a>
-            </div>`;
-          new maplibregl.Popup({ offset: 14, closeButton: false })
-            .setLngLat(e.lngLat)
-            .setHTML(html)
-            .addTo(map);
-        });
       });
-    });
+    };
+    map.on("load", setupLayers);
 
     return () => {
       map.remove();
@@ -154,11 +164,12 @@ export function LiveMap() {
 
   // Update source data when features change.
   useEffect(() => {
+    dataRef.current = { type: "FeatureCollection", features };
     const map = mapRef.current;
     if (!map) return;
     const source = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
     if (source) {
-      source.setData({ type: "FeatureCollection", features });
+      source.setData(dataRef.current);
     }
   }, [features]);
 
