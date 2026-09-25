@@ -27,8 +27,24 @@ _engine: AsyncEngine | None = None
 _session_factory: async_sessionmaker[AsyncSession] | None = None
 
 
+def normalize_url(url: str) -> str:
+    """Convert a standard Postgres URL into a SQLAlchemy async URL.
+
+    Railway (and most providers) expose DATABASE_URL as ``postgres://`` or
+    ``postgresql://``; SQLAlchemy's async engine requires the ``+asyncpg``
+    driver suffix.
+    """
+    if url.startswith("postgresql+") or url.startswith("sqlite") or url.startswith("postgresql+asyncpg"):
+        return url
+    if url.startswith("postgres://"):
+        return "postgresql+asyncpg://" + url[len("postgres://") :]
+    if url.startswith("postgresql://"):
+        return "postgresql+asyncpg://" + url[len("postgresql://") :]
+    return url
+
+
 def _build_engine(url: str | None = None) -> AsyncEngine:
-    url = url or settings.database_url
+    url = normalize_url(url or settings.database_url)
     if url.startswith("sqlite"):
         return create_async_engine(url, echo=False, future=True)
     return create_async_engine(url, echo=False, future=True, pool_pre_ping=True)
