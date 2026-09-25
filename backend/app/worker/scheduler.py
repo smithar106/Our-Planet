@@ -39,39 +39,59 @@ async def _guarded(name: str, coro_fn):
             logger.exception("job %s failed", name)
 
 
+async def _run_usgs() -> None:
+    await _guarded("usgs", jobs.run_usgs_job)
+
+
+async def _run_eonet() -> None:
+    await _guarded("eonet", jobs.run_eonet_job)
+
+
+async def _run_firms() -> None:
+    await _guarded("firms", jobs.run_firms_job)
+
+
+async def _run_agent() -> None:
+    await _guarded("agent", jobs.run_agent_job)
+
+
+async def _run_brief() -> None:
+    await _guarded("brief", jobs.run_brief_job)
+
+
 def start_scheduler() -> AsyncIOScheduler:
     scheduler = AsyncIOScheduler(timezone="UTC")
 
     scheduler.add_job(
-        lambda: asyncio.create_task(_guarded("usgs", jobs.run_usgs_job)),
+        _run_usgs,
         trigger=IntervalTrigger(seconds=settings.usgs_interval_seconds),
         id="usgs",
         max_instances=1,
         coalesce=True,
     )
     scheduler.add_job(
-        lambda: asyncio.create_task(_guarded("eonet", jobs.run_eonet_job)),
+        _run_eonet,
         trigger=IntervalTrigger(seconds=settings.eonet_interval_seconds),
         id="eonet",
         max_instances=1,
         coalesce=True,
     )
     scheduler.add_job(
-        lambda: asyncio.create_task(_guarded("firms", jobs.run_firms_job)),
+        _run_firms,
         trigger=IntervalTrigger(seconds=settings.firms_interval_seconds),
         id="firms",
         max_instances=1,
         coalesce=True,
     )
     scheduler.add_job(
-        lambda: asyncio.create_task(_guarded("agent", jobs.run_agent_job)),
+        _run_agent,
         trigger=IntervalTrigger(seconds=settings.firms_interval_seconds),
         id="agent",
         max_instances=1,
         coalesce=True,
     )
     scheduler.add_job(
-        lambda: asyncio.create_task(_guarded("brief", jobs.run_brief_job)),
+        _run_brief,
         trigger=IntervalTrigger(seconds=settings.brief_interval_seconds),
         id="brief",
         max_instances=1,
