@@ -48,7 +48,7 @@ export default defineRailway((ctx) => {
     build: "npm install && npm run build",
     start: "npm start",
     env: {
-      NEXT_PUBLIC_API_URL: `https://${api.env.RAILWAY_PUBLIC_DOMAIN}`,
+      NEXT_PUBLIC_API_URL: "https://api-production-3f28.up.railway.app",
       NEXT_PUBLIC_MAPBOX_TOKEN: preserve(),
     },
   });
