@@ -91,11 +91,20 @@ async def health() -> HealthOut:
 async def chat(request: ChatRequest, req: Request, session: AsyncSession = Depends(get_session)) -> ChatResponse:
     from app.rate_limit import chat_limiter
 
-    client_key = req.client.host if req.client else "unknown"
+    client_key = _client_ip(req)
     if not chat_limiter.allow(client_key):
         raise HTTPException(status_code=429, detail="rate limit exceeded")
     result = await answer_question(session, request.question)
     return ChatResponse(**result)
+
+
+def _client_ip(req: Request) -> str:
+    forwarded = req.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    if req.client:
+        return req.client.host
+    return "unknown"
 
 
 @router.get("/events/recent")

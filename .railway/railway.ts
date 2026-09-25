@@ -12,7 +12,7 @@ export default defineRailway((ctx) => {
   const db = postgres("postgres");
 
   const mlflowData = volume("mlflow-data", {
-    region: "us-west1",
+    region: "us-west2",
     sizeMB: 2048,
   });
 
@@ -42,7 +42,7 @@ export default defineRailway((ctx) => {
       LLM_BASE_URL: preserve(),
       AGENT_THRESHOLD: "50",
       TRACING_BACKEND: "memory",
-      MLFLOW_TRACKING_URI: `http://${mlflow.env.RAILWAY_PRIVATE_DOMAIN}:5000`,
+      MLFLOW_TRACKING_URI: "http://mlflow.railway.internal:5000",
     },
   });
 
@@ -59,7 +59,7 @@ export default defineRailway((ctx) => {
       LLM_BASE_URL: preserve(),
       AGENT_THRESHOLD: "50",
       TRACING_BACKEND: "memory",
-      MLFLOW_TRACKING_URI: `http://${mlflow.env.RAILWAY_PRIVATE_DOMAIN}:5000`,
+      MLFLOW_TRACKING_URI: "http://mlflow.railway.internal:5000",
     },
   });
 
