@@ -13,7 +13,7 @@ export default defineRailway((ctx) => {
   const api = service("api", {
     source: github("smithar106/Our-Planet", { branch: "main", rootDirectory: "backend" }),
     build: "pip install -r requirements.txt",
-    start: "python -m app.cli initdb && uvicorn app.main:app --host 0.0.0.0 --port 8000",
+    start: "python -m app.cli initdb && uvicorn app.main:app --host 0.0.0.0 --port $PORT",
     healthcheck: "/api/health",
     env: {
       DATABASE_URL: db.env.DATABASE_URL,
