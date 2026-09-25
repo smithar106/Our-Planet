@@ -20,6 +20,7 @@ export default defineRailway((ctx) => {
     source: github("smithar106/Our-Planet", { branch: "main", rootDirectory: "mlflow" }),
     start:
       "mlflow server --host 0.0.0.0 --port 5000 " +
+      "--allowed-hosts \"*.railway.internal*\" " +
       "--backend-store-uri sqlite:////data/mlflow.db " +
       "--default-artifact-root /data/artifacts",
     volumeMounts: { "/data": mlflowData },
