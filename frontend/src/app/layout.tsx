@@ -3,6 +3,7 @@ import { Inter, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { ChatWidget } from "@/components/ChatWidget";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Header />
         <main>{children}</main>
         <Footer />
+        <ChatWidget />
       </body>
     </html>
   );

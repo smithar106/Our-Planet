@@ -9,12 +9,13 @@ from __future__ import annotations
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import __version__
 from app.agent.fallback import deterministic_description
+from app.chat.service import answer_question
 from app.db import get_session
 from app.models import (
     AgentInvestigation,
@@ -26,6 +27,8 @@ from app.models import (
 )
 from app.schemas import (
     BriefOut,
+    ChatRequest,
+    ChatResponse,
     EventBrief,
     EventDetail,
     HealthOut,
@@ -82,6 +85,17 @@ async def _latest_investigation(session: AsyncSession, event_id: str) -> dict[st
 @router.get("/health", response_model=HealthOut)
 async def health() -> HealthOut:
     return HealthOut(status="ok", version=__version__)
+
+
+@router.post("/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest, req: Request, session: AsyncSession = Depends(get_session)) -> ChatResponse:
+    from app.rate_limit import chat_limiter
+
+    client_key = req.client.host if req.client else "unknown"
+    if not chat_limiter.allow(client_key):
+        raise HTTPException(status_code=429, detail="rate limit exceeded")
+    result = await answer_question(session, request.question)
+    return ChatResponse(**result)
 
 
 @router.get("/events/recent")

@@ -221,9 +221,41 @@ A lightweight span-based tracer wraps the pipeline run: USGS/EONET/FIRMS fetch,
 normalize, deduplicate, compare, score, select, investigate (tool calls, LLM,
 validate), publish. It tracks latency, errors, counts, and token usage.
 
-`TRACING_BACKEND` supports `memory` (default), `null`, and `mlflow`
-(MLflow-compatible via `MLFLOW_TRACKING_URI`, kept consistent with the rest of
-the portfolio). **Telemetry failures never break the pipeline.**
+**MLflow** — set `MLFLOW_TRACKING_URI` and each pipeline run / agent pass is
+logged as an MLflow run (via the lightweight `mlflow-skinny` client). A
+deployable MLflow tracking server is included in the Railway configuration
+(`mlflow/` service). **Telemetry failures never break the pipeline.**
+
+`TRACING_BACKEND` controls the in-process span tracer (`memory` / `null`).
+
+---
+
+## Chat — natural-language questions
+
+An in-app assistant (`/api/chat` + the floating widget) answers questions about
+live events. It uses the same read-only tools as the investigation agent and
+never writes to the database. External text is treated as data, not
+instructions, and the endpoint is rate-limited. Without an LLM configured, it
+returns deterministic guidance instead of fabricating an answer.
+
+---
+
+## SQL data investigation
+
+The agent and chat have a **read-only SQL tool** (`run_sql_query`). Queries are
+single-statement, must start with `SELECT`/`WITH`, pass a keyword blocklist, and
+execute inside a `READ ONLY` transaction — so even a bypassed validation cannot
+write. Results are capped at 100 rows.
+
+---
+
+## Agent evals (SQL-backed)
+
+`python -m app.cli eval` runs the evaluation harness and stores results in the
+`agent_evals` table, queryable with plain SQL (psql, the read-only SQL tool, or
+any SQL client). Cases cover grounding (unsupported numbers, restricted words),
+deterministic fallback schema, SQL write-blocking, and SQL ground-truth
+consistency — proving the safety architecture works.
 
 ---
 

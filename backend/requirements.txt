@@ -11,20 +11,44 @@ annotated-types==0.8.0
 anyio==4.15.1
     # via
     #   httpx
+    #   mlflow-skinny
     #   starlette
     #   watchfiles
 apscheduler==3.11.3
     # via planet-backend (pyproject.toml)
 asyncpg==0.31.0
     # via planet-backend (pyproject.toml)
+cachetools==7.2.0
+    # via mlflow-skinny
 certifi==2026.7.22
     # via
     #   httpcore
     #   httpx
+    #   requests
+cffi==2.1.1
+    # via cryptography
+charset-normalizer==3.5.1
+    # via requests
 click==8.5.0
-    # via uvicorn
+    # via
+    #   mlflow-skinny
+    #   uvicorn
+cloudpickle==3.1.2
+    # via mlflow-skinny
+cryptography==50.0.1
+    # via google-auth
+databricks-sdk==0.142.0
+    # via mlflow-skinny
 fastapi==0.141.1
-    # via planet-backend (pyproject.toml)
+    # via
+    #   planet-backend (pyproject.toml)
+    #   mlflow-skinny
+gitdb==4.0.12
+    # via gitpython
+gitpython==3.1.62
+    # via mlflow-skinny
+google-auth==2.58.1
+    # via databricks-sdk
 greenlet==3.5.6
     # via sqlalchemy
 h11==0.16.0
@@ -41,14 +65,44 @@ idna==3.20
     # via
     #   anyio
     #   httpx
+    #   requests
+importlib-metadata==9.0.1
+    # via mlflow-skinny
 mako==1.4.3
     # via alembic
 markupsafe==3.0.3
     # via mako
+mlflow-skinny==3.16.1
+    # via planet-backend (pyproject.toml)
+opentelemetry-api==1.45.0
+    # via
+    #   mlflow-skinny
+    #   opentelemetry-sdk
+    #   opentelemetry-semantic-conventions
+opentelemetry-proto==1.45.0
+    # via mlflow-skinny
+opentelemetry-sdk==1.45.0
+    # via mlflow-skinny
+opentelemetry-semantic-conventions==0.66b0
+    # via opentelemetry-sdk
+packaging==26.3
+    # via mlflow-skinny
+protobuf==6.33.6
+    # via
+    #   databricks-sdk
+    #   mlflow-skinny
+    #   opentelemetry-proto
+pyasn1==0.6.4
+    # via pyasn1-modules
+pyasn1-modules==0.4.2
+    # via google-auth
+pycparser==3.0
+    # via cffi
 pydantic==2.13.5
     # via
     #   planet-backend (pyproject.toml)
     #   fastapi
+    #   mlflow-skinny
     #   pydantic-settings
 pydantic-core==2.46.5
     # via pydantic
@@ -58,23 +112,40 @@ python-dateutil==2.9.0.post0
     # via planet-backend (pyproject.toml)
 python-dotenv==1.2.3
     # via
+    #   mlflow-skinny
     #   pydantic-settings
     #   uvicorn
 pyyaml==6.0.3
-    # via uvicorn
+    # via
+    #   mlflow-skinny
+    #   uvicorn
+requests==2.34.2
+    # via
+    #   databricks-sdk
+    #   mlflow-skinny
 six==1.17.0
     # via python-dateutil
+smmap==5.0.3
+    # via gitdb
 sqlalchemy==2.1.0
     # via
     #   planet-backend (pyproject.toml)
     #   alembic
+sqlparse==0.6.0
+    # via mlflow-skinny
 starlette==1.7.0
-    # via fastapi
+    # via
+    #   fastapi
+    #   mlflow-skinny
 typing-extensions==4.16.0
     # via
     #   alembic
     #   anyio
     #   fastapi
+    #   mlflow-skinny
+    #   opentelemetry-api
+    #   opentelemetry-sdk
+    #   opentelemetry-semantic-conventions
     #   pydantic
     #   pydantic-core
     #   sqlalchemy
@@ -87,11 +158,19 @@ typing-inspection==0.4.4
     #   pydantic-settings
 tzlocal==5.4.4
     # via apscheduler
+urllib3==2.8.0
+    # via
+    #   databricks-sdk
+    #   requests
 uvicorn==0.54.0
-    # via planet-backend (pyproject.toml)
+    # via
+    #   planet-backend (pyproject.toml)
+    #   mlflow-skinny
 uvloop==0.22.1
     # via uvicorn
 watchfiles==1.3.0
     # via uvicorn
 websockets==17.1
     # via uvicorn
+zipp==4.1.0
+    # via importlib-metadata

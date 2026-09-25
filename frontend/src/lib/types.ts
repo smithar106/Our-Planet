@@ -118,3 +118,10 @@ export interface Brief {
   watching: string[];
   generated_at: string;
 }
+
+export interface ChatResponse {
+  answer: string;
+  sources: string[];
+  deterministic: boolean;
+  used_tools: string[];
+}

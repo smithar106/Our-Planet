@@ -214,3 +214,20 @@ class ProviderRun(Base):
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     pipeline_run: Mapped[PipelineRun] = relationship(back_populates="provider_runs")
+
+
+class AgentEval(Base):
+    """Stored results of the agent evaluation harness.
+
+    Each row is one evaluated case. Results are queryable via plain SQL
+    (psql, the read-only SQL tool, or any SQL client) for analysis.
+    """
+
+    __tablename__ = "agent_evals"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=new_id)
+    eval_case: Mapped[str] = mapped_column(String(64), index=True)
+    category: Mapped[str] = mapped_column(String(32), index=True)  # grounding | fallback | sql | schema
+    passed: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    details: Mapped[dict] = mapped_column(JSONType, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

@@ -5,10 +5,28 @@ import {
   preserve,
   project,
   service,
+  volume,
 } from "railway/iac";
 
 export default defineRailway((ctx) => {
   const db = postgres("postgres");
+
+  const mlflowData = volume("mlflow-data", {
+    region: "us-west1",
+    sizeMB: 2048,
+  });
+
+  const mlflow = service("mlflow", {
+    source: github("smithar106/Our-Planet", { branch: "main", rootDirectory: "mlflow" }),
+    start:
+      "mlflow server --host 0.0.0.0 --port 5000 " +
+      "--backend-store-uri sqlite:////data/mlflow.db " +
+      "--default-artifact-root /data/artifacts",
+    volumeMounts: { "/data": mlflowData },
+    env: {
+      PORT: "5000",
+    },
+  });
 
   const api = service("api", {
     source: github("smithar106/Our-Planet", { branch: "main", rootDirectory: "backend" }),
@@ -24,6 +42,7 @@ export default defineRailway((ctx) => {
       LLM_BASE_URL: preserve(),
       AGENT_THRESHOLD: "50",
       TRACING_BACKEND: "memory",
+      MLFLOW_TRACKING_URI: `http://${mlflow.env.RAILWAY_PRIVATE_DOMAIN}:5000`,
     },
   });
 
@@ -40,6 +59,7 @@ export default defineRailway((ctx) => {
       LLM_BASE_URL: preserve(),
       AGENT_THRESHOLD: "50",
       TRACING_BACKEND: "memory",
+      MLFLOW_TRACKING_URI: `http://${mlflow.env.RAILWAY_PRIVATE_DOMAIN}:5000`,
     },
   });
 
@@ -54,6 +74,6 @@ export default defineRailway((ctx) => {
   });
 
   return project("planet", {
-    resources: [db, api, worker, web],
+    resources: [db, mlflowData, mlflow, api, worker, web],
   });
 });

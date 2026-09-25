@@ -436,4 +436,16 @@ async def run_pipeline(session: AsyncSession, providers: list[str] | None = None
     run.status = "succeeded"
     run.stats = totals
     await session.commit()
+
+    from app.observability import mlflow_log_run
+
+    mlflow_log_run(
+        run_name=f"pipeline:{','.join(providers)}",
+        metrics={
+            "events_created": float(totals["events_created"]),
+            "events_updated": float(totals["events_updated"]),
+            "events_escalated": float(totals["events_escalated"]),
+        },
+        params={"providers": ",".join(providers)},
+    )
     return run

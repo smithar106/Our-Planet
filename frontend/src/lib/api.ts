@@ -1,5 +1,6 @@
 import type {
   Brief,
+  ChatResponse,
   EventBrief,
   EventDetail,
   Summary,
@@ -61,4 +62,17 @@ export function getLatestBrief(): Promise<Brief> {
 
 export function getBrief(date: string): Promise<Brief> {
   return get<Brief>(`/brief/${date}`);
+}
+
+export async function askChat(question: string): Promise<ChatResponse> {
+  const res = await fetch(`${BASE}/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ question }),
+  });
+  if (!res.ok) {
+    if (res.status === 429) throw new Error("Rate limit exceeded — wait a moment.");
+    throw new Error(`Chat ${res.status}`);
+  }
+  return res.json() as Promise<ChatResponse>;
 }

@@ -46,10 +46,22 @@ async def _seed() -> None:
     print("fixtures loaded")
 
 
+async def _eval() -> None:
+    import json
+
+    from app.db import get_session_factory
+    from app.eval.harness import run_evals
+
+    factory = get_session_factory()
+    async with factory() as session:
+        summary = await run_evals(session)
+    print(json.dumps(summary, indent=2, default=str))
+
+
 def main() -> None:
     setup_logging()
     parser = argparse.ArgumentParser(description="PLANET backend CLI")
-    parser.add_argument("command", choices=["initdb", "worker", "once", "seed"])
+    parser.add_argument("command", choices=["initdb", "worker", "once", "seed", "eval"])
     args = parser.parse_args()
 
     if args.command == "initdb":
@@ -60,6 +72,8 @@ def main() -> None:
         asyncio.run(_once())
     elif args.command == "seed":
         asyncio.run(_seed())
+    elif args.command == "eval":
+        asyncio.run(_eval())
 
 
 if __name__ == "__main__":

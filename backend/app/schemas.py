@@ -91,3 +91,14 @@ class StatusOut(BaseModel):
 class HealthOut(BaseModel):
     status: str
     version: str
+
+
+class ChatRequest(BaseModel):
+    question: str
+
+
+class ChatResponse(BaseModel):
+    answer: str
+    sources: list[str] = Field(default_factory=list)
+    deterministic: bool = False
+    used_tools: list[str] = Field(default_factory=list)

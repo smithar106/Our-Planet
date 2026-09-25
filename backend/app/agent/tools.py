@@ -6,7 +6,7 @@ no tool receives write access. Each tool returns plain JSON-serializable dicts.
 Tool names mirror the product spec:
   get_event, get_event_history, get_recent_events, get_nearby_events,
   get_source_record, get_fire_cluster_history, compare_event_to_recent_activity,
-  get_global_summary
+  get_global_summary, run_sql_query
 """
 
 from __future__ import annotations
@@ -17,6 +17,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.agent.sql_tool import run_sql_query
 from app.models import Event, EventSnapshot, FireCluster, SourceRecord
 from app.pipeline.clustering import haversine_km
 
@@ -122,6 +123,25 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                 "type": "object",
                 "properties": {"hours": {"type": "number"}},
                 "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "run_sql_query",
+            "description": (
+                "Run a read-only SQL query against the PLANET database to "
+                "investigate the data (e.g. counts, aggregates, filtering). "
+                "Only SELECT / WITH queries are allowed; other operations are rejected."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "A single SELECT or WITH SQL statement."},
+                    "limit": {"type": "number", "description": "Max rows to return (default 50, max 100)."},
+                },
+                "required": ["query"],
             },
         },
     },
@@ -328,6 +348,7 @@ _TOOL_FUNCS = {
     "get_fire_cluster_history": get_fire_cluster_history,
     "compare_event_to_recent_activity": compare_event_to_recent_activity,
     "get_global_summary": get_global_summary,
+    "run_sql_query": run_sql_query,
 }
 
 
