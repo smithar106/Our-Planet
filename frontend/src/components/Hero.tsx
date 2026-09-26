@@ -33,7 +33,7 @@ export function Hero() {
             "radial-gradient(60% 60% at 20% 0%, rgba(46,143,201,0.10), transparent 60%), radial-gradient(50% 50% at 85% 10%, rgba(47,125,91,0.08), transparent 60%)",
         }}
       />
-      <div className="container-page relative py-16 sm:py-24">
+      <div className="container-page relative py-16 sm:pt-24 sm:pb-12">
         <div className="mx-auto max-w-3xl text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-ink-100 bg-white px-3 py-1 text-xs font-medium text-ink-600 shadow-soft">
             <span className="relative flex h-2 w-2">

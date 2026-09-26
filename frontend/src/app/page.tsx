@@ -10,8 +10,8 @@ export default function Home() {
     <>
       <Hero />
 
-      <section className="container-page -mt-8 pb-20">
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <section className="container-page pb-20">
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-x-8 gap-y-2">
           <div className="min-w-0">
             <p className="eyebrow">Live world map</p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink-950 sm:text-3xl">
