@@ -186,7 +186,7 @@ async def ingest_firms(session: AsyncSession, provider: FirmsProvider) -> dict[s
     Clusters below ``fire_min_detections`` are treated as noise (isolated
     thermal anomalies, not meaningful fires) and are skipped.
     """
-    stats = {"fetched": 0, "clusters": 0, "created": 0, "updated": 0, "escalated": 0, "pruned": 0}
+    stats = {"fetched": 0, "clusters": 0, "created": 0, "updated": 0, "escalated": 0}
     result: FetchResult = await provider.fetch()
     detections = result.records
     stats["fetched"] = len(detections)
@@ -212,9 +212,6 @@ async def ingest_firms(session: AsyncSession, provider: FirmsProvider) -> dict[s
                 stats["escalated"] += 1
             else:
                 stats["updated"] += 1
-
-    # Prune previously-created noise clusters (keeps the table clean over time).
-    stats["pruned"] = await _prune_noise_wildfire(session, settings.fire_min_detections)
     return stats
 
 
@@ -325,6 +322,7 @@ async def _update_fire_event(
     event.geometry = cluster["geometry"]
     event.latitude = cluster["centroid_lat"]
     event.longitude = cluster["centroid_lon"]
+    event.title = _fire_title(cluster)
     event.last_observed_at = cluster["last_detected_at"] or event.last_observed_at
     event.raw_severity = {"max_frp": cluster["max_frp"], "detections": cluster["detection_count"]}
     score = score_event("wildfire", metrics)
@@ -459,6 +457,9 @@ async def run_pipeline(session: AsyncSession, providers: list[str] | None = None
         totals["events_updated"] += stats.get("updated", 0)
         totals["events_escalated"] += stats.get("escalated", 0)
         logger.info("provider=%s status=%s %.3fs", provider_name, stats.get("status"), elapsed)
+
+    # Prune noise fire clusters (idempotent, cheap) so the table stays clean.
+    totals["pruned"] = await _prune_noise_wildfire(session, settings.fire_min_detections)
 
     run.ended_at = datetime.now(UTC)
     run.status = "succeeded"
