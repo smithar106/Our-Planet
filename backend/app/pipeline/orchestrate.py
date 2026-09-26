@@ -438,6 +438,7 @@ async def run_pipeline(session: AsyncSession, providers: list[str] | None = None
     totals: dict[str, Any] = {"events_created": 0, "events_updated": 0, "events_escalated": 0}
     for provider_name in providers:
         started = time.perf_counter()
+        started_at = datetime.now(UTC)
         stats = await run_provider(session, provider_name)
         elapsed = time.perf_counter() - started
         await session.flush()
@@ -446,6 +447,8 @@ async def run_pipeline(session: AsyncSession, providers: list[str] | None = None
                 pipeline_run_id=run.id,
                 provider=provider_name,
                 status=stats.get("status", "failed"),
+                started_at=started_at,
+                ended_at=datetime.now(UTC),
                 records_fetched=stats.get("fetched", 0),
                 events_created=stats.get("created", 0),
                 events_updated=stats.get("updated", 0),
