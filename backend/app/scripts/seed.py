@@ -48,7 +48,7 @@ async def reset_fixtures() -> None:
 
     # VACUUM FULL must run outside a transaction to reclaim disk space.
     async with get_engine().connect() as conn:
-        autocommit = conn.execution_options(isolation_level="AUTOCOMMIT")
+        autocommit = await conn.execution_options(isolation_level="AUTOCOMMIT")
         await autocommit.execute(text("VACUUM (FULL, ANALYZE)"))
 
     await seed_fixtures()
