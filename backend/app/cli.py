@@ -46,6 +46,15 @@ async def _seed() -> None:
     print("fixtures loaded")
 
 
+async def _reseed() -> None:
+    from app.db import init_db
+    from app.scripts.seed import reset_fixtures
+
+    await init_db()
+    await reset_fixtures()
+    print("database purged and reseeded with synthetic fixtures")
+
+
 async def _eval() -> None:
     import json
 
@@ -61,7 +70,7 @@ async def _eval() -> None:
 def main() -> None:
     setup_logging()
     parser = argparse.ArgumentParser(description="PLANET backend CLI")
-    parser.add_argument("command", choices=["initdb", "worker", "once", "seed", "eval"])
+    parser.add_argument("command", choices=["initdb", "worker", "once", "seed", "reseed", "eval"])
     args = parser.parse_args()
 
     if args.command == "initdb":
@@ -72,6 +81,8 @@ def main() -> None:
         asyncio.run(_once())
     elif args.command == "seed":
         asyncio.run(_seed())
+    elif args.command == "reseed":
+        asyncio.run(_reseed())
     elif args.command == "eval":
         asyncio.run(_eval())
 

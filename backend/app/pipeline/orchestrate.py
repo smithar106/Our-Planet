@@ -402,14 +402,35 @@ async def run_provider(session: AsyncSession, provider_name: str) -> dict[str, A
     provider = None
     try:
         with span(f"provider.{provider_name}"):
-            if provider_name == "usgs":
+            if settings.ingest_mode == "synthetic":
+                from app.ingest.fixtures import (
+                    FixtureEonetProvider,
+                    FixtureFirmsProvider,
+                    FixtureUsgsProvider,
+                )
+
+                if provider_name == "usgs":
+                    provider = FixtureUsgsProvider()
+                elif provider_name == "eonet":
+                    provider = FixtureEonetProvider()
+                elif provider_name == "firms":
+                    provider = FixtureFirmsProvider()
+                else:
+                    raise ValueError(f"unknown provider {provider_name}")
+            elif provider_name == "usgs":
                 provider = UsgsProvider()
-                stats = await ingest_usgs(session, provider)
             elif provider_name == "eonet":
                 provider = EonetProvider()
-                stats = await ingest_eonet(session, provider)
             elif provider_name == "firms":
                 provider = FirmsProvider()
+            else:
+                raise ValueError(f"unknown provider {provider_name}")
+
+            if provider_name == "usgs":
+                stats = await ingest_usgs(session, provider)
+            elif provider_name == "eonet":
+                stats = await ingest_eonet(session, provider)
+            elif provider_name == "firms":
                 stats = await ingest_firms(session, provider)
             else:
                 raise ValueError(f"unknown provider {provider_name}")

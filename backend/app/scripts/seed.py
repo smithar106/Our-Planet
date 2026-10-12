@@ -21,3 +21,27 @@ async def seed_fixtures() -> None:
         await session.commit()
     async with factory() as session:
         await run_investigations(session)
+
+
+async def reset_fixtures() -> None:
+    """Purge all ingested data and reseed with deterministic synthetic fixtures.
+
+    Production-only (Postgres): truncates every data table with CASCADE, then
+    reseeds the small synthetic dataset. Intended to reclaim space consumed by
+    unbounded live ingestion.
+    """
+    from sqlalchemy import text
+
+    factory = get_session_factory()
+    async with factory() as session:
+        await session.execute(
+            text(
+                "TRUNCATE TABLE source_records, event_snapshots, fire_clusters, "
+                "agent_investigations, daily_briefs, provider_runs, pipeline_runs, "
+                "agent_evals, events RESTART IDENTITY CASCADE"
+            )
+        )
+        await session.commit()
+
+    await seed_fixtures()
+
