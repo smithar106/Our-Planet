@@ -27,10 +27,13 @@ async def reset_fixtures() -> None:
     """Purge all ingested data and reseed with deterministic synthetic fixtures.
 
     Production-only (Postgres): truncates every data table with CASCADE, then
-    reseeds the small synthetic dataset. Intended to reclaim space consumed by
-    unbounded live ingestion.
+    runs VACUUM FULL to return physical disk space, and reseeds the small
+    synthetic dataset. Intended to reclaim space consumed by unbounded live
+    ingestion.
     """
     from sqlalchemy import text
+
+    from app.db import get_engine
 
     factory = get_session_factory()
     async with factory() as session:
@@ -42,6 +45,11 @@ async def reset_fixtures() -> None:
             )
         )
         await session.commit()
+
+    # VACUUM FULL must run outside a transaction to reclaim disk space.
+    async with get_engine().connect() as conn:
+        autocommit = conn.execution_options(isolation_level="AUTOCOMMIT")
+        await autocommit.execute(text("VACUUM (FULL, ANALYZE)"))
 
     await seed_fixtures()
 
