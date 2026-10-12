@@ -1,14 +1,7 @@
 """Observability / tracing abstraction.
 
-Two complementary mechanisms:
-
-1. Span tracing (in-process) — a lightweight span tree used across the
-   pipeline, agent, and validation. Backends: "memory" (tests/dev) or "null".
-
-2. MLflow run logging — each logical unit of work (pipeline run, agent pass,
-   daily brief) is logged as an MLflow run when `MLFLOW_TRACKING_URI` is set.
-   MLflow is imported lazily so it never becomes a hard dependency, and any
-   telemetry failure is isolated and never breaks the pipeline.
+A lightweight in-process span tracer used across the pipeline, agent, and
+validation. Backends: "memory" (tests/dev) or "null".
 """
 
 from __future__ import annotations
@@ -110,41 +103,3 @@ def span(name: str):
     else:
         tracer.end(s)
 
-
-# ---------------------------------------------------------------------------
-# MLflow
-# ---------------------------------------------------------------------------
-
-
-def mlflow_enabled() -> bool:
-    return bool(settings.mlflow_tracking_uri)
-
-
-def mlflow_log_run(
-    run_name: str,
-    metrics: dict[str, float] | None = None,
-    params: dict[str, Any] | None = None,
-    tags: dict[str, str] | None = None,
-) -> str | None:
-    """Log a single MLflow run. Returns the run id, or None if disabled/failed.
-
-    Never raises — observability failures must not break the pipeline.
-    """
-    if not mlflow_enabled():
-        return None
-    try:
-        import mlflow  # type: ignore
-
-        mlflow.set_tracking_uri(settings.mlflow_tracking_uri)
-        mlflow.set_experiment("planet")
-        with mlflow.start_run(run_name=run_name) as run:
-            if params:
-                mlflow.log_params({k: str(v)[:500] for k, v in params.items()})
-            if metrics:
-                mlflow.log_metrics({k: float(v) for k, v in metrics.items()})
-            if tags:
-                mlflow.set_tags(tags)
-            return run.info.run_id
-    except Exception as exc:  # pragma: no cover - optional dependency
-        logger.warning("MLflow logging failed (ignored): %s", exc)
-        return None

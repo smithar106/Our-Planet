@@ -94,15 +94,4 @@ async def run_investigations(session: AsyncSession, limit: int = 20) -> dict[str
 
     await session.commit()
 
-    from app.observability import mlflow_log_run
-
-    mlflow_log_run(
-        run_name="agent:investigate",
-        metrics={
-            "selected": float(stats["selected"]),
-            "completed": float(stats["completed"]),
-            "fallbacks": float(stats["fallbacks"]),
-            "failed": float(stats["failed"]),
-        },
-    )
     return stats

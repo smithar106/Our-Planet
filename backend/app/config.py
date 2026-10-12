@@ -59,8 +59,7 @@ class Settings(BaseSettings):
     http_max_retries: int = 3
 
     # --- Observability ---------------------------------------------------
-    tracing_backend: str = "memory"  # memory | mlflow | null
-    mlflow_tracking_uri: str | None = Field(default=None, alias="MLFLOW_TRACKING_URI")
+    tracing_backend: str = "memory"  # memory | null
 
     # --- Misc ------------------------------------------------------------
     cors_origins: str = "*"

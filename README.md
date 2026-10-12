@@ -221,11 +221,6 @@ A lightweight span-based tracer wraps the pipeline run: USGS/EONET/FIRMS fetch,
 normalize, deduplicate, compare, score, select, investigate (tool calls, LLM,
 validate), publish. It tracks latency, errors, counts, and token usage.
 
-**MLflow** — set `MLFLOW_TRACKING_URI` and each pipeline run / agent pass is
-logged as an MLflow run (via the lightweight `mlflow-skinny` client). A
-deployable MLflow tracking server is included in the Railway configuration
-(`mlflow/` service). **Telemetry failures never break the pipeline.**
-
 `TRACING_BACKEND` controls the in-process span tracer (`memory` / `null`).
 
 ---
