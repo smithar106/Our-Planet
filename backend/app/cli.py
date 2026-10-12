@@ -23,7 +23,14 @@ async def _initdb() -> None:
 
 
 async def _worker() -> None:
+    from app.config import settings
     from app.worker.scheduler import start_scheduler
+
+    if settings.reseed_on_start:
+        from app.scripts.seed import reset_fixtures
+
+        await reset_fixtures()
+        print("reseeded synthetic fixtures on worker start")
 
     start_scheduler()
     while True:

@@ -28,6 +28,7 @@ class Settings(BaseSettings):
 
     # --- Data sources ----------------------------------------------------
     ingest_mode: str = Field(default="live", alias="INGEST_MODE")  # live | synthetic
+    reseed_on_start: bool = Field(default=False, alias="RESEED_ON_START")  # one-shot purge+seed on worker start
     usgs_feed_url: str = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson"
     eonet_api_url: str = "https://eonet.gsfc.nasa.gov/api/v3/events"
     firms_api_url: str = "https://firms.modaps.eosdis.nasa.gov/api/area/csv"
